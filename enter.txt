@@ -1,7 +1,160 @@
-OUTPUT "are we insane?"
-INPUT ans
-IF ans = "yes" THEN
-	OUTPUT "correct"
-ELSE
-	OUTPUT "incorrect"
-ENDIF
+#include<stdio.h>
+#include<string.h>
+#include<stdlib.h>
+
+typedef struct item{
+    int itemid;
+    char name[100];
+    char price[1000];
+    int quantity;
+    struct item *next;
+} Item;
+
+Item *first, *last;
+
+struct cart{
+    int itemid;
+    char name[100];
+    char price[1000];
+    int quantity;
+    struct cart *next;
+} *fir = NULL, *las = NULL;
+
+Item item10 = {10, "Women saree", "1800/-", 0, NULL};
+Item item9 = {9, "Casual T-shirt", "799/-", 0, &item10};
+Item item8 = {8, "Mens solid jacket", "2239/-", 0, &item9};
+Item item7 = {7, "Mens watch", "2000/-", 0, &item8};
+Item item6 = {6, "Shirt", "1499/-", 0, &item7};
+Item item5 = {5, "Shoes", "2000/-", 0, &item6};
+Item item4 = {4, "US polo Tshirt", "999/-", 0, &item5};
+Item item3 = {3, "One8x puma", "5999/-", 0, &item4};
+Item item2 = {2, "Mens dryflex", "2999/-", 0, &item3};
+Item item1 = {1, "Puma sneaker V2", "3499/-", 0, &item2};
+
+void print(Item *head) {
+    Item *temp = head;
+    printf("\n\n\t Items available \n");
+    printf("%-4s %-20s %-10s\n", "ID", "Item Name", "Price");
+    while (temp != NULL) {
+        printf("%-4d %-20s %-10s\n", temp->itemid, temp->name, temp->price);
+        temp = temp->next;
+    }
+}
+
+Item *findItemById(Item *head, int id) {
+    Item *temp = head;
+    while (temp != NULL) {
+        if (temp->itemid == id) {
+            return temp;
+        }
+        temp = temp->next;
+    }
+}
+
+void addtocart(int id, int quantity) {
+    Item *item = findItemById(&item1, id);
+    if (item != NULL) {
+        struct cart *nn;
+        nn = (struct cart*)malloc(sizeof(struct cart));
+        nn->itemid = item->itemid;
+        strcpy(nn->name, item->name);
+        strcpy(nn->price, item->price);
+        nn->quantity = quantity;
+        if (fir == NULL) {
+            fir = nn;
+            las = nn;
+        } else {
+            las->next = nn;
+            las = nn;
+        }
+        printf("Item added to cart!\n");
+    } else {
+        printf("Item with ID %d not found!\n", id);
+    }
+}
+
+void displaycart() {
+    struct cart *temp = fir;
+    printf("\n\n\t Items in cart \n");
+    printf("%-4s %-20s %-10s %-8s\n", "ID", "Item Name", "Price", "Quantity");
+    while(temp != NULL) {
+        printf("%-4d %-20s %-10s %-8d\n", temp->itemid, temp->name, temp->price, temp->quantity);
+        temp = temp->next;
+    }
+}
+
+void removecart(int id, int quantity) {
+    struct cart *temp = fir, *prev = NULL;
+    while (temp != NULL) {
+        if (temp->itemid == id) {
+            if (temp->quantity > quantity) {
+                temp->quantity -= quantity;
+                printf("Quantity %d of Item with ID %d removed from cart!\n", quantity, id);
+            } else if (temp->quantity == quantity) {
+                if (prev == NULL) {
+                    fir = temp->next;
+                } else {
+                    prev->next = temp->next;
+                }
+                if (temp == las) {
+                    las = prev;
+                }
+                free(temp);
+                printf("Item with ID %d removed from cart!\n", id);
+            } else {
+                printf("Quantity %d of Item with ID %d exceeds the quantity in the cart!\n", quantity, id);
+            }
+            return;
+        }
+        prev = temp;
+        temp = temp->next;
+    }
+    printf("Item with ID %d not found in cart!\n", id);
+}
+int TotalBill() {
+    struct cart *temp = fir;
+    int price,totalBill = 0;
+    while(temp != NULL) {
+         price = atoi(temp->price); 
+        totalBill += price * temp->quantity;
+        temp = temp->next;
+    }
+    return totalBill;
+}
+int main() {
+    int ch, id, quantity;
+    print(&item1);
+    do {
+        printf(" 1.Add to cart\n 2.Display cart\n 3.Remove from the cart\n 4.Exit\n");
+        printf("Enter your choice:");
+        scanf("%d", &ch);
+        switch (ch) {
+            case 1:
+                printf("Enter id of the product:");
+                scanf("%d", &id);
+                printf("Enter quantity:");
+                scanf("%d", &quantity);
+                addtocart(id, quantity);
+                break;
+            case 2:
+                displaycart();
+                break;
+            case 3:
+                printf("Enter id of item that should be removed:");
+                scanf("%d", &id);
+                printf("Enter quantity:");
+                scanf("%d", &quantity);
+                removecart(id, quantity);
+                break;
+            case 4:
+                    displaycart();
+             printf("\nTotal Bill: Rs.%d/-\n",TotalBill());
+                printf("\nThank you for shopping with us!\n Please Visit Again!\n Exiting...\n");
+                break;
+            default:
+                printf("\nInvalid choice. Please try again.\n");
+
+        }
+    } while (ch != 4);
+    return 0;
+}
